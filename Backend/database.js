@@ -11,8 +11,19 @@ async function criarBanco(){
     await db.exec(`
         CREATE TABLE IF NOT EXISTS abrigos(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+
             nome TEXT,
-            vagas INTEGER
+            
+            endereco TEXT,
+
+            bairro TEXT,
+
+            capacidade INTEGER,
+
+            vagas INTEGER,
+
+            telefone TEXT
+
             )
         `)
 return db

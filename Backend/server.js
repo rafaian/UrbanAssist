@@ -26,20 +26,20 @@ async function iniciarServidor() {
 iniciarServidor()
 
 
-//Lista em memória
-let abrigos = [
-    {
-        id: 1,
-        nome: "Escola Municipal",
-        vagas: 40
-    },
+// //Lista em memória
+// let abrigos = [
+//     {
+//         id: 1,
+//         nome: "Escola Municipal",
+//         vagas: 40
+//     },
 
-    {
-        id: 2,
-        nome: "Ginasio Central",
-        vagas: 75
-    },        
-]
+//     {
+//         id: 2,
+//         nome: "Ginasio Central",
+//         vagas: 75
+//     },        
+// ]
 
 
 
@@ -55,15 +55,35 @@ app.get("/abrigos", async (req, res) => {
 // Criando POST:
 app.post("/abrigos", async (req,res)=>{
 
- const { nome, vagas } = req.body
+ const { 
+    nome, 
+    endereco,
+    bairro, 
+    capacidade, 
+    vagas, 
+    telefone 
+ } = req.body
 
  await db.run(
-   "INSERT INTO abrigos (nome, vagas) VALUES (?, ?)",
-   [nome, vagas]
+    `
+   INSERT INTO abrigos
+   (nome, endereco, bairro, capacidade, vagas, telefone ) 
+   
+   VALUES (?, ?, ?, ?, ?, ?)
+   `,
+   
+   [
+    nome,
+    endereco,
+    bairro,
+    capacidade, 
+    vagas,
+    telefone
+]
  )
 
  res.json({
-   mensagem:"Abrigo salvo no banco com sucesso"
+   mensagem:"Abrigo cadastrado com sucesso"
  })
 
 })
@@ -96,4 +116,19 @@ app.put("/abrigos/:id", async (req, res) => {
         res.json({
         mensagem:"Abrigo atualizado com sucesso",
     })
+
+
+})
+
+app.get ("/buscar", async (req,res)=>{
+   
+    const bairro = req.query.bairro
+   
+    const resultado = await db.all(
+        "SELECT * FROM abrigos WHERE bairro = ?",
+        [bairro]
+    
+    )
+    res.json(resultado)
+
 })
