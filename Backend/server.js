@@ -2,6 +2,7 @@ const express = require("express")
 const app = express()
 app.use(express.json())
 const PORT = process.env.PORT || 3000
+const { criarBanco } = require("./database")
 
 
 // Servirdor:
@@ -9,6 +10,21 @@ app.get("/", (req, res)=>{
     res.send("UrbanAssist API funcionando!!!")
 
 })
+
+
+
+let db
+
+async function iniciarServidor() { 
+    db = await criarBanco()
+    app.listen(PORT,()=>{
+        console.log(`Servidor rodando em http://localhost:${PORT}`)
+    })
+    
+}
+
+iniciarServidor()
+
 
 //Lista em memória
 let abrigos = [
@@ -29,28 +45,37 @@ let abrigos = [
 
 //CRUD
 // Criando GET:
-app.get("/abrigos",(req, res) => {
+app.get("/abrigos", async (req, res) => {
+    const abrigos = await db.all(
+        "SELECT * FROM abrigos"
+    )
     res.json(abrigos)
 })
 
 // Criando POST:
-app.post("/abrigos",(req, res)=>{
-   const novoAbrigo = req.body
+app.post("/abrigos", async (req,res)=>{
 
-   abrigos.push(novoAbrigo)
+ const { nome, vagas } = req.body
 
-   res.json({
-    mensagem: "Abrigo criado com sucesso",
-    dados: novoAbrigo
-   })
+ await db.run(
+   "INSERT INTO abrigos (nome, vagas) VALUES (?, ?)",
+   [nome, vagas]
+ )
+
+ res.json({
+   mensagem:"Abrigo salvo no banco com sucesso"
+ })
 
 })
 
 //Criando DELETE:
-app.delete("/abrigos/:id",(req, res) => {
+app.delete("/abrigos/:id", async (req, res) => {
     const id = Number(req.params.id)
 
-    abrigos = abrigos.filter(abrigo => abrigo.id !== id)
+    await db.run(
+        "DELETE FROM abrigos WHERE id = ?",
+        [id]
+    )
     
 
 
@@ -58,26 +83,17 @@ app.delete("/abrigos/:id",(req, res) => {
 })
 
 //criando PUT:
-app.put("/abrigos/:id",(req, res) => {
+app.put("/abrigos/:id", async (req, res) => {
     const id = Number(req.params.id)
 
-    const abrigo = abrigos.find (a => a.id === id)
+    const { vagas } = req.body
 
-    if(!abrigo){
-        return res.status(404).send("Abrigo não encontrado")
-    }
-
-    abrigo.vagas = req.body.vagas
-
-    res.json({
+    await db.run(
+        "UPDATE abrigos SET vagas = ? WHERE id = ?", 
+        [vagas, id]
+    )
+        
+        res.json({
         mensagem:"Abrigo atualizado com sucesso",
-        dados: abrigo
     })
-})
-
-
-
-
-app.listen(PORT,() => {
-    console.log(`Servidor rodando na porta: http://localhost:${PORT}`)
 })
